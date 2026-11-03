@@ -1,0 +1,1508 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "WVN Hackathon Site & Plant Manpower API",
+        "description": "Authoritative OpenAPI 3.0 specification for WVN Hackathon Site manpower planning, plant operations, employee demographics, and competitor benchmarks.\n\n### Core Domain Rules & Calculation Guidance\n1. Plants Catalog: Canonical plants in WVN Site are dynamically linked from hrec_plants. Physical columns are strictly id, name, created_at, updated_at.\n2. 11-Day Rolling Forecast (T -> T+10):\n   - Workday Baseline: 7-workday moving average of daily Direct Labor leavers prior to reference date T, excluding Sundays.\n   - Sunday Rule: Projected leavers on any Sunday = 0.\n   - Payday Multiplier (1.5x): On the 11th of each month (or 12th if 11th falls on Sunday), projected leavers = round(avg_leavers * 1.5, 0).\n   - Expected Hiring: expected_hiring = standard_manpower_delta + leave_forecast + student_exit_forecast.\n3. Query Standards: All endpoints support both flat query parameters (e.g. year=2026&month=10, compatible with AI Agent Function Calling / Dify / OpenAI Tools) and Spatie QueryBuilder standards (filter[...], sort, fields, per_page, page).\n4. Uniform Response Envelope: Every response is wrapped with request_id, as_of_date, snapshot_id, source_refreshed_at, data, meta (total, page, per_page), and warnings.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://wvn-pmo-portal.wistron.com/api/v1/hackathon/site",
+            "description": "Hackathon Site Gateway v1 (Independent REST API)"
+        },
+        {
+            "url": "https://wvn-pmo-portal.wistron.com/api/mcp-tools/hackathon/site",
+            "description": "Hackathon Site Gateway Legacy"
+        }
+    ],
+    "paths": {
+        "/daily-analyses": {
+            "get": {
+                "tags": [
+                    "Plant Manpower"
+                ],
+                "summary": "Get daily manpower analyses (system on-job, manpower gap, turnover rate, recruitment demand)",
+                "description": "Queries raw daily manpower analysis records from hrec_plant_daily_analyses with filters for year, month, week, and daily report ID.",
+                "operationId": "getDailyAnalyses",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Analysis year (2000..2100). (Also accepts filter[year])",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Analysis month (1..12). (Also accepts filter[month])",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "week",
+                        "in": "query",
+                        "description": "Analysis ISO week number (1..53). (Also accepts filter[week])",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 44
+                        }
+                    },
+                    {
+                        "name": "plant_daily_report_id",
+                        "in": "query",
+                        "description": "Associated daily operational report ID. (Also accepts filter[plant_daily_report_id])",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (id, year, month, day, manpower_gap, recruitment_demand)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id,plant_daily_report_id,year,month,day,manpower_gap"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily manpower analyses wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/daily-reports": {
+            "get": {
+                "tags": [
+                    "Plant Manpower"
+                ],
+                "summary": "Get daily operational manpower reports (FCST K, PCBA/FA shifts, standard manpower, borrowed manpower)",
+                "description": "Queries raw daily operational report records from hrec_plant_daily_reports dynamically linked with hrec_plants.",
+                "operationId": "getDailyReports",
+                "parameters": [
+                    {
+                        "name": "plant_id",
+                        "in": "query",
+                        "description": "Filter by plant ID in hrec_plants (supports comma-separated positive integers). (Also accepts filter[plant_id])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "4"
+                        }
+                    },
+                    {
+                        "name": "date_between",
+                        "in": "query",
+                        "description": "Report date range in YYYY-MM-DD,YYYY-MM-DD format. (Also accepts filter[date_between])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10-01,2026-10-31"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (report_date, -report_date, plant_id, standard_manpower, fcst_k)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-report_date"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id,report_date,plant_id,plant,standard_manpower"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily operational reports wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/employees/active-baseline": {
+            "get": {
+                "tags": [
+                    "Employee Demographics"
+                ],
+                "summary": "Get active Direct Labor (DL) headcount baseline at the latest snapshot by plant",
+                "description": "Aggregates active headcount at the latest batch snapshot in fact_employeeinfo_c (recommended focus on manufacturing company codes 6G0, 6Q0, 7J0 via filter[company]).",
+                "operationId": "getEmployeeActiveBaseline",
+                "parameters": [
+                    {
+                        "name": "plant_list",
+                        "in": "query",
+                        "description": "Filter by plant names from hrec_plants (or Site, Managed). (Also accepts filter[plant_list])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1,P3"
+                        }
+                    },
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Alias filter for plant name. (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "labor_type",
+                        "in": "query",
+                        "description": "Filter by labor type classification (DL, IDL). (Also accepts filter[labor_type])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "DL",
+                            "enum": [
+                                "DL",
+                                "IDL"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Optional company code filter (recommended focus: 6G0, 6Q0, 7J0), comma-separated. (Also accepts filter[company])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "6G0,6Q0,7J0"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (plant, -plant, active_dl_headcount, -active_dl_headcount)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,labor_type,snapshot_date,active_dl_headcount"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active employee baseline headcount by plant wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/employees/demographics": {
+            "get": {
+                "tags": [
+                    "Employee Demographics"
+                ],
+                "summary": "Get Direct Labor (DL) demographic breakdown by plant (age tiers, gender, referral types)",
+                "description": "Breaks down active DL employees by age tier (<18, 18-25, 26-35, 36-45, >45), gender, or referral source type at the latest batch snapshot in fact_employeeinfo_c (recommended company filter: 6G0, 6Q0, 7J0).",
+                "operationId": "getEmployeeDemographics",
+                "parameters": [
+                    {
+                        "name": "plant_list",
+                        "in": "query",
+                        "description": "Filter by plant names from hrec_plants (or Site, Managed). (Also accepts filter[plant_list])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1,P2"
+                        }
+                    },
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Alias filter for plant name. (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "dimension",
+                        "in": "query",
+                        "description": "Breakdown dimension (age, sex, type, all). (Also accepts filter[dimension])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "age",
+                            "enum": [
+                                "age",
+                                "sex",
+                                "type",
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Optional company code filter (recommended focus: 6G0, 6Q0, 7J0), comma-separated. (Also accepts filter[company])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "6G0,6Q0,7J0"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (plant, dimension, count, -count)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,dimension,category,count,percentage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Direct Labor demographics data wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/employees/historical-leavers": {
+            "get": {
+                "tags": [
+                    "Employee Demographics"
+                ],
+                "summary": "Get historical Direct Labor leavers aggregated by plant and termination date",
+                "description": "Aggregates historical DL employee resignations/terminations (excluding student interns) from fact_employeeinfo_c grouped by plant and termination date.",
+                "operationId": "getEmployeeHistoricalLeavers",
+                "parameters": [
+                    {
+                        "name": "plant_list",
+                        "in": "query",
+                        "description": "Filter by plant names from hrec_plants (or Site, Managed). (Also accepts filter[plant_list])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1,P5"
+                        }
+                    },
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Alias filter for plant name. (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "date_between",
+                        "in": "query",
+                        "description": "Termination date range in YYYY-MM-DD,YYYY-MM-DD format. (Also accepts filter[date_between])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10-01,2026-10-31"
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Optional company code filter (recommended focus: 6G0, 6Q0, 7J0), comma-separated. (Also accepts filter[company])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "6G0,6Q0,7J0"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (termination_date, -termination_date, leavers_count, plant)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-termination_date"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,termination_date,leavers_count"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historical leavers grouped by plant and date wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/manpower-forecast": {
+            "get": {
+                "tags": [
+                    "Plant Manpower"
+                ],
+                "summary": "Compute 11-day rolling manpower forecast with Sunday zero-exit & 11th payday multiplier",
+                "description": "Computes day-by-day rolling forecast (T -> T+10) for each plant based on active baseline, 7-workday moving average leavers, calendar rules (Sunday=0 leavers, 11th payday multiplier 1.5x), and scheduled intern exits.",
+                "operationId": "getManpowerForecast",
+                "parameters": [
+                    {
+                        "name": "plants",
+                        "in": "query",
+                        "description": "Filter by manufacturing plant names from hrec_plants (e.g. P1,P2,P3,P5). (Also accepts filter[plants])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Alias filter for plant name. (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "as_of_date",
+                        "in": "query",
+                        "description": "Forecast horizon start date (T) in YYYY-MM-DD format (defaults to latest batch date). (Also accepts filter[as_of_date])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-11-06"
+                        }
+                    },
+                    {
+                        "name": "date_between",
+                        "in": "query",
+                        "description": "Forecast date range in YYYY-MM-DD,YYYY-MM-DD format. (Also accepts filter[date_between])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-11-06,2026-11-16"
+                        }
+                    },
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Optional company code filter (recommended focus: 6G0, 6Q0, 7J0), comma-separated. (Also accepts filter[company])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "6G0,6Q0,7J0"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (date, -date, plant, expected_hiring, leave_forecast)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "date"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,date,is_sunday,is_payday_multiplier,leave_forecast,expected_hiring"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rolling 11-day manpower forecast wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/guide": {
+            "get": {
+                "tags": [
+                    "Reference & Metadata"
+                ],
+                "summary": "Natural language semantic router and interactive guide for Hackathon Site APIs and MCP tools",
+                "description": "Assists AI agents and engineers in discovering the most relevant API endpoints and MCP tools given an analytical query.",
+                "operationId": "getApiGuide",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "User intent or question (e.g. \"What is the hiring forecast for P1 in November?\"). (Also accepts filter[query])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "What is the hiring forecast for P1?"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Scope guide to a specific category: all, operational, demographic, staging, forecast. (Also accepts filter[category])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "forecast",
+                            "enum": [
+                                "all",
+                                "operational",
+                                "demographic",
+                                "staging",
+                                "forecast"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "API and MCP tool routing recommendations.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/interns": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Student intern headcount, schools, onboarding and planned exit schedules",
+                "description": "Returns the roster of student interns including school affiliation, badge IDs, onboarding dates, planned and actual exit dates from the DuckDB student_interns staging table.",
+                "operationId": "getInterns",
+                "parameters": [
+                    {
+                        "name": "school",
+                        "in": "query",
+                        "description": "Filter interns by school name (partial match). (Also accepts filter[school])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Cao dang Kinh te"
+                        }
+                    },
+                    {
+                        "name": "exit_date_between",
+                        "in": "query",
+                        "description": "Filter by actual or planned exit date range (YYYY-MM-DD,YYYY-MM-DD). (Also accepts filter[exit_date_between])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10-01,2026-10-31"
+                        }
+                    },
+                    {
+                        "name": "badge",
+                        "in": "query",
+                        "description": "Filter by specific student badge ID. (Also accepts filter[badge])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "V25021730"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (serial_no, school_name, badge_id, student_name, onboarding_date, planned_exit_date, actual_exit_date, exit_reason).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-actual_exit_date"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (comma-separated list of fields to include).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "school_name,badge_id,student_name,planned_exit_date,actual_exit_date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of student interns matching query criteria.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/interns/schedule-changes": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Summary of student intern exit schedule change reasons",
+                "description": "Aggregates impacted student intern counts by schedule adjustment reason and partner school from the DuckDB student_interns staging table.",
+                "operationId": "getInternScheduleChanges",
+                "parameters": [
+                    {
+                        "name": "reason_keyword",
+                        "in": "query",
+                        "description": "Keyword search within the exit schedule adjustment reason (e.g. P3, P1). (Also accepts filter[reason_keyword])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P3"
+                        }
+                    },
+                    {
+                        "name": "school",
+                        "in": "query",
+                        "description": "Filter by partner school name. (Also accepts filter[school])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Thai Nguyen"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (adjustment_reason, school, school_name, impacted_students).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-impacted_students"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (adjustment_reason, school, school_name, impacted_students).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "adjustment_reason,school,impacted_students"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of student intern exit schedule change summaries.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/interns/schools": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Affiliated educational institutions and student intern supply breakdown",
+                "description": "Aggregates student intern headcounts by collaborating school, college, or university from the DuckDB student_interns staging table.",
+                "operationId": "getInternSchools",
+                "parameters": [
+                    {
+                        "name": "min_count",
+                        "in": "query",
+                        "description": "Filter schools with at least this number of assigned interns. (Also accepts filter[min_count])",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (school_name, intern_count, -intern_count).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-intern_count"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (comma-separated list of fields to include).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "school_name,intern_count"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregated intern headcounts by school.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/interns/selected-batch": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Priority selection and special batch tracking for student interns",
+                "description": "Returns the special/selected batch of student interns cross-referenced between the student roster and Sheet2 selection list in DuckDB.",
+                "operationId": "getInternSelectedBatch",
+                "parameters": [
+                    {
+                        "name": "badge",
+                        "in": "query",
+                        "description": "Filter by specific student badge ID. (Also accepts filter[badge])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "V26082442"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by student full name (partial match). (Also accepts filter[name])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Tran Van"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (badge, name, full_name, school_name, onboard_date, actual_exit_date).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "badge"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (badge, name, full_name, school_name, onboard_date, actual_exit_date, schedule_change_reason).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "badge,name,school_name,onboard_date,actual_exit_date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of priority-selected student interns.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/manpower-matrix": {
+            "get": {
+                "tags": [
+                    "Plant Manpower"
+                ],
+                "summary": "PowerBI Daily Manpower Demand Matrix reproducing operational report views",
+                "description": "Reconstructs the operational Daily Manpower Demand Matrix matching PowerBI matrix view with slicers for plant, date range, and rolling month slicers (current_month, month_2, month_3).",
+                "operationId": "getManpowerMatrix",
+                "parameters": [
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Filter by manufacturing plant name (e.g. P1, P2, P3, P5). (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "date_between",
+                        "in": "query",
+                        "description": "Report date range in YYYY-MM-DD,YYYY-MM-DD format. (Also accepts filter[date_between])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-10-01,2026-10-31"
+                        }
+                    },
+                    {
+                        "name": "month_slicer",
+                        "in": "query",
+                        "description": "Filter by dynamic month slicer (current_month, month_2, month_3). (Also accepts filter[month_slicer])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "current_month",
+                            "enum": [
+                                "current_month",
+                                "month_2",
+                                "month_3"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "as_of_date",
+                        "in": "query",
+                        "description": "Reference snapshot date in YYYY-MM-DD format (defaults to latest batch date). (Also accepts filter[as_of_date])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026-11-06"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (date, -date, plant, standard_manpower, estimated_on_job, manpower_gap)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "date"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,date,month_slicer,standard_manpower,estimated_on_job,manpower_gap"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daily Manpower Demand Matrix wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/metric-definitions": {
+            "get": {
+                "tags": [
+                    "Reference & Metadata"
+                ],
+                "summary": "Authoritative KPI formulas, calculation methods, and data lineage",
+                "description": "Returns the dictionary of operational metric definitions including exact SQL/statistical formulas, source database tables, and business rules.",
+                "operationId": "getMetricDefinitions",
+                "parameters": [
+                    {
+                        "name": "metric",
+                        "in": "query",
+                        "description": "Filter by specific metric identifier (e.g. expected_hiring, leave_forecast). (Also accepts filter[metric])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "expected_hiring"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filter metrics by category: operational, demographic, staging, forecast. (Also accepts filter[category])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "forecast",
+                            "enum": [
+                                "operational",
+                                "demographic",
+                                "staging",
+                                "forecast"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (metric, name, category, unit, version).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "metric"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (metric, name, category, unit, formula, source_tables, business_rules, version).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "metric,name,formula,business_rules"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of standardized KPI metric definitions and formulas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/plants": {
+            "get": {
+                "tags": [
+                    "Plant Manpower"
+                ],
+                "summary": "Get canonical plant catalog and department mapping rules from hrec_plants",
+                "description": "Returns the list of manufacturing plants in the WVN Site from the hrec_plants table along with canonical plant codes and department mapping rules.",
+                "operationId": "getPlants",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active plant status (1, 0, true, false). (Also accepts filter[is_active])",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort by field (id, -id, name, -name, plant_code, -plant_code)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Select sparse fieldset columns to return (id,name,plant_code,is_active,dept_mapping_rule)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id,name,plant_code,is_active"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Plant catalog wrapped in the Uniform Response Envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access"
+                    },
+                    "422": {
+                        "description": "Validation error on query parameters"
+                    }
+                }
+            }
+        },
+        "/recruitment-policies": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Competitor recruitment policy benchmarks, hiring demand, and labor costs",
+                "description": "Returns monthly and weekly hiring demand, regular and temporary labor recruitment costs, and policy terms for regional electronics competitors from the DuckDB recruitment_policy staging table.",
+                "operationId": "getRecruitmentPolicies",
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "query",
+                        "description": "Filter by competitor company name (e.g. Foxconn, Luxshare, Goertek). (Also accepts filter[company])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Foxconn"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Survey year (4-digit integer between 2020 and 2100). (Also accepts filter[year])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "2026"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Survey month. (Also accepts filter[month])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Oct"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (year, month, week, company, monthly_demand, estimated_weekly, actual_weekly, monthly_cost_vnd, total_cost_vnd).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "-monthly_demand"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (comma-separated list of fields to include).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "company,monthly_demand,monthly_cost_vnd,total_cost_vnd,regular_policy_terms"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of competitor recruitment policies and hiring costs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        },
+        "/transfers": {
+            "get": {
+                "tags": [
+                    "Staging Operations"
+                ],
+                "summary": "Direct Labor cross-plant personnel transfers and net borrowed manpower",
+                "description": "Returns the Direct Labor cross-plant transfer matrix showing personnel sent out, received in, and net balance by plant from the DuckDB DL transfers staging table.",
+                "operationId": "getTransfers",
+                "parameters": [
+                    {
+                        "name": "plant",
+                        "in": "query",
+                        "description": "Filter transfers for a specific plant (e.g. P1, P2, P3, P5). (Also accepts filter[plant])",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "P1"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort results by field (plant, out_count, in_count, net_transfer). Prefix with - for descending.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant"
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "description": "Sparse fieldset selection (comma-separated list of fields to include).",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "plant,in_count,out_count,net_transfer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cross-plant Direct Labor transfer matrix.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "request_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "as_of_date": {
+                                            "type": "string",
+                                            "format": "date"
+                                        },
+                                        "snapshot_id": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        },
+                                        "warnings": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: Unauthorized access to Hackathon Site API."
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity: Invalid query parameter or filter."
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Plant Manpower",
+            "description": "Plant daily manpower reports, analyses, PowerBI matrix, and 11-day rolling forecast"
+        },
+        {
+            "name": "Employee Demographics",
+            "description": "Direct Labor active baseline, age/gender/type demographics, and historical leavers"
+        },
+        {
+            "name": "Staging Operations",
+            "description": "Cross-plant DL transfers, vocational student interns, and competitor recruitment benchmarks"
+        },
+        {
+            "name": "Reference & Metadata",
+            "description": "Interactive guide and KPI metric formulas for engineers and AI agents"
+        }
+    ]
+}
