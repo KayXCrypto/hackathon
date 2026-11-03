@@ -1,0 +1,74 @@
+Agent Lab
+getPlants
+K
+Plant	Canonical code
+P1	P1
+P2	P2
+P3	P3
+P5	P5
+(Prompt Tokens 8818 | Completion Tokens 335 | Total Tokens 9153 | Total Cost NTD $0 )
+Nhân lực của từng xưởng
+K
+Bạn muốn xem nhân lực của từng xưởng theo dữ liệu mới nhất, hay tại một ngày cụ thể?
+
+(Prompt Tokens 4410 | Completion Tokens 147 | Total Tokens 4557 | Total Cost NTD $0 )
+tổng nhân lực hôm nay của từng xưởng
+K
+Dữ liệu hôm nay cho thấy số nhân lực ước tính trên chuyền của từng xưởng như dưới đây. Số headcount active đã xác minh không có dữ liệu cho các xưởng này, nên các con số không nên được hiểu là headcount active.
+
+Xưởng	Nhân lực ước tính trên chuyền (người)	Định biên (người)	GAP vận hành (người)
+P1	1.756	1.469	+287
+P2	1.536	1.540	−4
+P3	3.433	3.594	−161
+P5	748	630	+118
+P1 và P5 có GAP dương; P2 và P3 có GAP âm theo dữ liệu vận hành. Các GAP này không phải trường trạng thái được nguồn trả về trực tiếp.
+
+Nguồn và kỳ dữ liệu: dữ liệu vận hành ngày 2026-11-03; snapshot headcount active cùng ngày không trả về bản ghi. Nguồn chính sách tuyển dụng: không áp dụng; ngày hiệu lực chính sách: không áp dụng. Đơn vị headcount là người; FCST trong nguồn được ghi theo K.
+
+(Prompt Tokens 9359 | Completion Tokens 607 | Total Tokens 9966 | Total Cost NTD $0 )
+tôi muốn tuyển 100 người cho xưởng P1
+K
+Bạn muốn tuyển 100 người cho P1 để đáp ứng nhu cầu vào ngày nào hoặc trong giai đoạn nào?
+
+(Prompt Tokens 4755 | Completion Tokens 149 | Total Tokens 4904 | Total Cost NTD $0 )
+cho tháng 11
+K
+Chưa thể xác nhận tuyển 100 người cho P1 trong tháng 11 có đáp ứng GAP hay không: Workforce Agent không cung cấp được GAP cho cả tháng vì dữ liệu hằng ngày có thể bị đếm lặp. Vui lòng chọn một ngày cụ thể hoặc một tuần trong tháng 11/2026 để phân tích.
+
+Xưởng	Giai đoạn được yêu cầu	Số cần tuyển	GAP / trạng thái
+P1	Tháng 11/2026	100 người (đề xuất)	Chưa xác định
+Khuyến nghị: Chọn ngày hoặc tuần cần đáp ứng nhân lực; sau khi có GAP, có thể đối chiếu đề xuất tuyển 100 người. Chưa đánh giá chi phí.
+
+Nguồn và giả định: Kỳ yêu cầu là tháng 11/2026; bước phân tích GAP chưa có dữ liệu phù hợp. Đơn vị nhân lực: người; tiền tệ: chưa áp dụng. Nguồn chính sách và ngày hiệu lực: chưa tra cứu.
+
+(Prompt Tokens 9913 | Completion Tokens 738 | Total Tokens 10651 | Total Cost NTD $0 )
+tính GAP của tháng 10 so với tháng 11
+K
+Theo snapshot cuối tháng, GAP của P1 chuyển từ dư 18 người vào cuối tháng 10 sang dư dự báo 103 người vào cuối tháng 11. Các số này là ảnh chụp tại từng ngày, không phải tổng GAP của cả tháng; theo các snapshot này, hiện chưa có căn cứ cho thấy cần tuyển thêm.
+
+Xưởng	Kỳ	Ngày đối chiếu	GAP (người)	Trạng thái
+P1	Tháng 10/2026	31/10/2026	+18	Dư
+P1	Tháng 11/2026	30/11/2026	+103	Dư dự báo
+GAP được tính theo nhân lực ước tính trên chuyền trừ định biên; số dương là dư. Không nên cộng các GAP hằng ngày để tạo thành GAP tháng vì các snapshot lặp lại headcount. Snapshot ngày 30/11 là dự báo, chưa phải kết quả thực tế. Do đó, các số này chưa xác nhận rằng tuyển 100 người là cần thiết.
+
+Nguồn và giả định: P1 Daily Manpower Matrix; kỳ dữ liệu 01–31/10/2026 và 01–30/11/2026, đối chiếu tại ngày cuối mỗi tháng. Đơn vị: người; tiền tệ: không áp dụng. Nguồn chính sách tuyển dụng và ngày hiệu lực: không áp dụng cho phân tích GAP này.
+
+(Prompt Tokens 10497 | Completion Tokens 721 | Total Tokens 11218 | Total Cost NTD $0 )
+dự báo cho cả 4 xưởng tháng 11 có cần tuyển thêm người không
+K
+Chưa thể xác định xưởng nào trong P1, P2, P3 và P5 cần tuyển thêm trong toàn tháng 11/2026: Workforce Agent không truy xuất được GAP theo tháng vì các snapshot hằng ngày có thể bị đếm lặp. Vui lòng chọn một ngày cụ thể hoặc một khoảng tối đa 7 ngày trong tháng 11 để dự báo.
+
+Xưởng	Kỳ yêu cầu	GAP / trạng thái
+P1, P2, P3, P5	01–30/11/2026	Chưa xác định
+Nguồn và giả định: Kỳ yêu cầu là 01–30/11/2026; chưa có GAP hoặc trạng thái do phân tích workforce chưa được truy xuất. Đơn vị nhân lực: người; tiền tệ: không áp dụng. Nguồn chính sách tuyển dụng chưa tra cứu; ngày hiệu lực chính sách chưa xác định.
+
+(Prompt Tokens 11229 | Completion Tokens 529 | Total Tokens 11758 | Total Cost NTD $0 )
+01–30/11/2026
+K
+Chưa thể xác định P1, P2, P3 hay P5 có cần tuyển thêm người trong 01–30/11/2026 hay không. Workforce Agent gặp lỗi 500 Internal Server Error khi truy xuất dự báo; công cụ cũng chỉ hỗ trợ dự báo theo horizon T đến T+10, không bao phủ trọn tháng trong một lần truy vấn.
+
+Xưởng	GAP / trạng thái
+P1, P2, P3, P5	Chưa có dữ liệu
+Nguồn và giả định: Kỳ yêu cầu: 01–30/11/2026. Lỗi xảy ra ở bước truy xuất dự báo workforce; chưa có số liệu GAP. Đơn vị nhân lực: người; tiền tệ: không áp dụng. Nguồn chính sách tuyển dụng và ngày hiệu lực: chưa tra cứu, không áp dụng cho bước dự báo này.
+
+Bạn muốn thử lại với một ngày cụ thể hoặc một khoảng tối đa 11 ngày trong tháng 11/2026?
