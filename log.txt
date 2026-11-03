@@ -1,55 +1,80 @@
-tuyển 100 người cho P3 thì tốn bao nhiêu tiền ngân sách 2 tỷ
-K
-Bạn muốn tính chi phí tuyển 100 lao động loại nào (DL hay IDL), và áp dụng cho tháng/kỳ nào?
-
-(Prompt Tokens 5882 | Completion Tokens 136 | Total Tokens 6018 | Total Cost NTD $0 )
-DL , áp dụng cho tháng 11
+tuyển 100 người DL tháng 11 cho P3 tốn bao nhiêu tiền
 K
 # Argument
-{"task":"Compare the user's proposed recruitment scenario for P3: 100 Direct Labor (DL) hires in November 2026, budget VND 2,000,000,000. Set current_gap exactly to Workforce Agent returned gap_headcount = 161 (do not modify). Recruitment Cost Agent could not return cost/policy for P3/DL/Nov 2026 (estimated_cost null, currency/policy_source/effective date null). Report whether scenario vs budget can be assessed from available data; do not invent costs. Include policy_source, effective date, units, currency if available."}
+{"task":"Ước tính chi phí tuyển 100 lao động DL (direct labor) cho nhà máy P3 trong tháng 11/2026 (01–30/11/2026). Trả về đơn vị, tiền tệ, policy_source, ngày hiệu lực chính sách, cùng các giả định/phạm vi tuyển dụng."}
 
 # Response
 {
-  "plant": "P3",
-  "employee_type": "DL",
-  "current_gap": 161,
-  "budget": 2000000000,
-  "currency": "VND (ngân sách do người dùng cung cấp; tiền tệ của chính sách chưa có)",
-  "units": {
-    "quantity": "người tuyển",
-    "cost": "không xác định"
+  "reference": "Wistron (benchmark đối thủ)",
+  "period": "Chưa có benchmark tháng 11/2026; dùng kỳ 2026 Oct W5",
+  "unit_cost_vnd": 13640000,
+  "range_vnd": {
+    "min": 8640000,
+    "max": 20800000
   },
-  "maximum_affordable_quantity": null,
-  "maximum_gap_limited_quantity": null,
-  "scenarios": [
-    {
-      "quantity": 100,
-      "estimated_cost": null,
-      "remaining_gap": null,
-      "surplus_after_gap_filled": null,
-      "within_budget": null
-    }
-  ],
-  "status": "Không thể đánh giá kịch bản so với ngân sách từ dữ liệu hiện có.",
-  "policy_source": null,
-  "policy_effective_date": null,
-  "assumptions": [
-    "Dùng nguyên GAP do Workforce Agent cung cấp: 161 người, snapshot ngày 2026-11-03.",
-    "Chi phí ước tính, tiền tệ của chính sách và thông tin chính sách áp dụng cho P3/DL/tháng 11/2026 chưa có; không suy đoán chi phí hoặc khả năng nằm trong ngân sách.",
-    "GAP được cung cấp là snapshot ngày 2026-11-03, không phải GAP tổng đã xác nhận cho cả tháng 11."
-  ],
-  "rationale": "Chưa thể xác định 100 lượt tuyển có nằm trong ngân sách 2.000.000.000 VND hay không vì không có chi phí hoặc chính sách tuyển dụng áp dụng. Cần xác nhận chính sách và chi phí với bộ phận phụ trách; đây là thông tin để người có thẩm quyền xem xét, không phải quyết định tuyển dụng."
+  "quantity": 100,
+  "estimated_cost_vnd": 1364000000,
+  "estimated_range_vnd": {
+    "min": 864000000,
+    "max": 2080000000
+  },
+  "unit": "VND/người cho chu kỳ tuyển 90 ngày",
+  "currency": "VND",
+  "policy_source": "Benchmark tuyển dụng của các công ty đối thủ; đơn giá tham chiếu lấy từ dòng Wistron",
+  "policy_effective_date": "Nguồn không nêu ngày hiệu lực cụ thể; kỳ benchmark là 2026 Oct W5, dữ liệu truy vấn ngày 2026-11-03",
+  "notes": [
+    "Benchmark đối thủ, không phải chính sách riêng của nhà máy P3.",
+    "Chưa có benchmark tháng 11/2026; dùng kỳ 2026 Oct W5.",
+    "Phép tính đơn giá tham chiếu: 100 × 13.640.000 = 1.364.000.000 VND.",
+    "Khoảng theo benchmark thấp nhất–cao nhất: 100 × 8.640.000 = 864.000.000 VND đến 100 × 20.800.000 = 2.080.000.000 VND.",
+    "Chi phí/người dùng total_cost_vnd cho chu kỳ tuyển 90 ngày; monthly_cost_vnd của Wistron là 4.546.666 VND/tháng.",
+    "Benchmark không phân biệt DL và IDL; cũng không áp dụng riêng theo nhà máy. Phạm vi ước tính là 100 lao động tuyển trong giai đoạn 01–30/11/2026, giả định đủ 100 người và không điều chỉnh theo tiến độ tuyển trong tháng.",
+    "Điều khoản Wistron ghi nhận phí giới thiệu 16.000 VND/giờ trong 90 ngày, không thanh toán nếu làm dưới 7 ngày, cùng thưởng người mới theo tháng; các khoản/điều kiện này không được cộng riêng vào ước tính."
+  ]
 }
-Chưa thể xác định tuyển 100 lao động trực tiếp (DL) tại P3 trong tháng 11/2026 có nằm trong ngân sách 2.000.000.000 VND hay không: không có chi phí hoặc chính sách tuyển dụng áp dụng để đối chiếu. Tại snapshot ngày 03/11/2026, dữ liệu workforce ghi thiếu 161 người, nhưng đây không phải GAP đã xác nhận cho toàn tháng.
+Ước tính tuyển 100 lao động trực tiếp (DL) cho P3 trong tháng 11/2026 là 1.364.000.000 VND. Đây là mức tham chiếu, không phải báo giá riêng của P3.
 
-Hạng mục	Kết quả
-Đề xuất tuyển	100 người, DL
-GAP workforce	161 người thiếu tại snapshot 03/11/2026
-Chi phí tuyển dụng	Chưa xác định
-So với ngân sách	Chưa thể đánh giá
-Chính sách / ngày hiệu lực	Không có dữ liệu trả về
-Khuyến nghị: Xác nhận chính sách và chi phí áp dụng cho P3/DL tháng 11 trước khi cân nhắc đề xuất tuyển. GAP ngày 03/11 không nên được xem là nhu cầu đã xác nhận cho cả tháng.
+Hạng mục	Ước tính
+Chi phí tham chiếu/người	13.640.000 VND
+Tổng chi phí ước tính cho 100 người	1.364.000.000 VND
+Khoảng tham chiếu tổng cộng	864.000.000–2.080.000.000 VND
+Nguồn và giả định: Nhà máy P3; kỳ tuyển dụng 01–30/11/2026. Nguồn chính sách là benchmark tuyển dụng đối thủ, lấy dòng Wistron từ kỳ 2026 Oct W5 vì chưa có benchmark tháng 11/2026; nguồn không nêu ngày hiệu lực cụ thể. Đơn giá tính theo chu kỳ tuyển dụng 90 ngày. Benchmark không phân biệt DL/IDL và không riêng cho P3, nên đây là ước tính tham chiếu, không phải chi phí đã xác nhận.
 
-Nguồn và giả định: Workforce — Daily Manpower Matrix, snapshot 03/11/2026; chi phí — không có bản ghi chính sách cho P3/DL/tháng 11/2026. Đơn vị nhân lực: người; ngân sách người dùng cung cấp: VND; tiền tệ của chính sách tuyển dụng: chưa xác định. Chưa có GAP tổng cho tháng 11.
+(Prompt Tokens 9791 | Completion Tokens 639 | Total Tokens 10430 | Total Cost NTD $0 )
+chí phí / người này bao gồm những gì ?
+K
+# Argument
+{"task":"For the previously quoted estimate of recruiting 100 DL workers for P3 in November 2026, explain what the per-person cost of 13,640,000 VND includes (and excludes, if available). Please provide the policy_source, policy effective date, units, currency, and clarify whether this is an itemized cost or a benchmark average."}
 
-Đề xuất này đang chờ Finance xác nhận ngân sách và Plant Director phê duyệt. Bạn muốn thử lại với một ngày/tuần cụ thể trong tháng 11, hay cung cấp thông tin chính sách chi phí để đối chiếu?
+# Response
+{
+  "policy_source": "Wistron (benchmark đối thủ)",
+  "period": "2026 Oct W5; chưa có benchmark tháng 11/2026, nên dùng kỳ này",
+  "policy_effective_date": "Không có ngày hiệu lực chính xác trong dữ liệu. Oct W5 2026 là kỳ benchmark, không xác nhận ngày chính sách bắt đầu.",
+  "unit_cost_vnd": 13640000,
+  "units": "VND/người cho chu kỳ tuyển dụng 90 ngày",
+  "currency": "VND",
+  "itemized_or_average": "Mức benchmark tổng hợp, không phải chi phí được phân rã theo hạng mục. Dữ liệu không xác nhận các điều khoản bên dưới được cộng đầy đủ vào con số 13.640.000 VND.",
+  "known_policy_terms": [
+    "Phí dịch vụ tuyển dụng được ghi là 16.000 VND/giờ trong 90 ngày; không thanh toán nếu người lao động làm dưới 7 ngày.",
+    "Thưởng nhân viên mới được ghi là tổng 5.000.000 VND, trả trong 3 tháng: 2.000.000 + 2.000.000 + 1.000.000 VND.",
+    "Thưởng đạt chỉ tiêu cho nhà cung cấp: không có."
+  ],
+  "exclusions": "Không có bảng phân rã hoặc danh sách khoản loại trừ cụ thể. Không thể xác định từ dữ liệu liệu con số benchmark có bao gồm riêng từng khoản thưởng/phí nêu trên hay chi phí nào khác.",
+  "estimate_for_100": "100 × 13.640.000 = 1.364.000.000 VND",
+  "notes": [
+    "Đây là benchmark đối thủ, không phải chính sách riêng của P3.",
+    "Benchmark không phân biệt DL và IDL; mức này không phải báo giá riêng cho 100 lao động DL.",
+    "monthly_cost_vnd của Wistron là 4.546.666 VND/tháng; total_cost_vnd 13.640.000 VND là mức cho chu kỳ 90 ngày."
+  ]
+}
+Mức 13.640.000 VND/người là benchmark tổng hợp, không phải bảng chi phí được phân rã. Vì vậy, dữ liệu không xác nhận chính xác khoản nào đã được tính vào mức này hoặc khoản nào bị loại trừ.
+
+Các điều khoản được ghi nhận trong benchmark Wistron là:
+
+Phí dịch vụ tuyển dụng: 16.000 VND/giờ trong 90 ngày; không thanh toán nếu người lao động làm dưới 7 ngày.
+Thưởng nhân viên mới: 5.000.000 VND trong 3 tháng (2.000.000 + 2.000.000 + 1.000.000 VND).
+Thưởng đạt chỉ tiêu cho nhà cung cấp: không có.
+Tuy nhiên, không thể khẳng định các khoản phí và thưởng trên đã được cộng đầy đủ vào mức 13.640.000 VND/người.
+
+Nguồn và giả định: P3; kỳ tuyển dụng 01–30/11/2026; nguồn chính sách là benchmark đối thủ Wistron, kỳ 2026 Oct W5 (dùng thay vì chưa có benchmark tháng 11/2026). Đơn vị: VND/người cho chu kỳ 90 ngày. Ngày hiệu lực chính xác không có trong dữ liệu. Benchmark không riêng cho P3 và không phân biệt DL/IDL.
