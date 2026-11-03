@@ -379,3 +379,36 @@ BCC:
 
 6. If the recipient configuration is missing,
    stop and report a configuration error.
+
+
+
+
+# EMAIL EXECUTION WORKFLOW
+
+MANUAL MODE:
+
+1. Generate the complete workforce report.
+2. Show report preview.
+3. Display the configured fixed recipient.
+4. Wait for explicit user confirmation.
+5. Invoke the Outlook Send E-Mail plugin.
+6. Verify the actual tool response.
+7. Return the sending status.
+
+AUTO MODE:
+
+1. Only activate when automatic reporting
+   has been explicitly requested.
+2. Validate all required agent results.
+3. Generate the complete report.
+4. Use the fixed recipient configuration.
+5. Invoke the Outlook Send E-Mail plugin.
+6. Verify the actual tool response.
+7. Return the sending status.
+
+IMPORTANT:
+
+Generating an email is not the same as sending it.
+
+Only report SENT after successful plugin execution.
+
