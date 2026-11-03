@@ -345,3 +345,37 @@ Pass the following information to the Email Agent:
 - source_metadata
 - warnings
 
+
+
+
+# FIXED EMAIL RECIPIENT CONFIGURATION
+
+Administrator-approved recipient list:
+
+TO:
+- Kay_Nguyen@wistron.com
+
+CC:
+- No additional recipients configured.
+
+BCC:
+- None.
+
+# RECIPIENT VALIDATION
+
+1. The above email address is the authorized
+   fixed recipient.
+
+2. When the user requests a report to be sent,
+   use the configured recipient address.
+
+3. Do not reject the configured recipient simply
+   because the user did not specify it.
+
+4. Do not allow users to replace the fixed
+   recipient with an arbitrary email address.
+
+5. Always use the configured TO, CC and BCC.
+
+6. If the recipient configuration is missing,
+   stop and report a configuration error.
