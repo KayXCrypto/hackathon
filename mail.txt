@@ -1,0 +1,99 @@
+Mẫu dưới đây dùng cho email gửi Tài chính và Giám đốc nhà máy. Ô `{{...}}` do Report Agent điền từ kết quả các agent khác, ô nào thiếu dữ liệu thì ghi "Chưa có dữ liệu", không để trống và không tự điền số.
+
+## Mẫu email
+
+**Tiêu đề:** `[Đề xuất tuyển dụng] {{plant}} – {{kỳ}} – {{ngày lập}}`
+
+```
+Kính gửi {{người nhận}},
+
+Dưới đây là đề xuất cân đối nhân lực do WorkforcePilot lập ngày {{ngày lập}}.
+Đây là đề xuất để xem xét, chưa phải quyết định tuyển dụng.
+
+1. TÓM TẮT
+• Xưởng: {{plant}} | Kỳ phân tích: {{từ ngày}} – {{đến ngày}}
+• Kết luận: {{thiếu / đủ / dư}}, ngày thiếu nặng nhất {{ngày}} ({{số người}} người)
+• Đề xuất: tuyển {{số lượng}} người, chi phí ước tính {{tổng chi phí}} VND
+• Cần: Tài chính xác nhận ngân sách; Giám đốc nhà máy phê duyệt
+
+2. HIỆN TRẠNG NHÂN LỰC
+| Chỉ số | Giá trị |
+| Ngày đối chiếu | {{ngày}} |
+| Nhân lực ước tính đang làm việc | {{số}} người |
+| Định biên | {{số}} người |
+| GAP | {{số}} người ({{thiếu/dư}}) |
+| Số ngày thiếu trong kỳ | {{số}} / {{tổng số ngày}} |
+| Ngày thiếu nặng nhất | {{ngày}}: {{số}} người |
+
+3. DỰ BÁO (nếu có, tối đa 11 ngày)
+{{Tóm tắt dự báo nghỉ việc, học sinh rút, expected_hiring}}
+
+4. CHI PHÍ ƯỚC TÍNH
+| Hạng mục | Giá trị |
+| Đơn giá tham chiếu | {{đơn giá}} VND/người (chu kỳ 90 ngày) |
+| Khoảng tham chiếu | {{min}} – {{max}} VND/người |
+| Chi phí cho {{số lượng}} người | {{tổng}} VND |
+
+5. SO SÁNH KỊCH BẢN (ngân sách {{ngân sách}} VND)
+| Số người tuyển | Chi phí | Trong ngân sách? | GAP còn lại |
+| {{q1}} | {{c1}} | {{có/không}} | {{r1}} |
+| {{q2}} | {{c2}} | {{có/không}} | {{r2}} |
+| {{q3}} | {{c3}} | {{có/không}} | {{r3}} |
+Tối đa mua được theo ngân sách: {{số}} người.
+
+6. KHUYẾN NGHỊ
+{{1–3 dòng dựa trên các số ở trên, nêu đánh đổi}}
+
+7. NGUỒN VÀ GIẢ ĐỊNH
+• Nhân lực: {{nguồn}}, snapshot {{snapshot_id}}, làm mới lúc {{source_refreshed_at}}
+• Chi phí: benchmark ngành kỳ {{kỳ benchmark}}, không phải chính sách riêng của {{plant}}
+• Điều khoản kèm theo (không cộng vào con số): {{phí/giờ, thưởng...}}
+• Cảnh báo từ hệ thống: {{warnings hoặc "không có"}}
+
+8. XÁC NHẬN
+☐ Tài chính xác nhận ngân sách: ____________ Ngày: ______
+☐ Giám đốc nhà máy: ☐ Duyệt  ☐ Từ chối  ☐ Chỉnh sửa  ____________ Ngày: ______
+
+Email này do WorkforcePilot soạn tự động từ dữ liệu chỉ đọc. Vui lòng kiểm tra trước khi quyết định.
+```
+
+## Ví dụ đã điền (dùng số từ log test, chỉ minh họa)
+
+**Tiêu đề:** `[Đề xuất tuyển dụng] P3 – Tháng 11/2026 – 03/11/2026`
+
+- **Tóm tắt:** P3 thiếu 161 người tại ngày 03/11/2026. Đề xuất tuyển 100 người, chi phí ước tính 1.364.000.000 VND, còn thiếu 61 người sau khi tuyển.
+- **Hiện trạng:** nhân lực ước tính 3.433, định biên 3.594, GAP −161 (thiếu). Số ngày thiếu và ngày thiếu nặng nhất cả tháng: *Chưa có dữ liệu* (cần chạy `getManpowerMatrix` cho cả tháng).
+- **Chi phí:** đơn giá tham chiếu 13.640.000 VND/người (dòng Wistron trong bảng benchmark ngành, kỳ Oct W5), khoảng 8.640.000 – 20.800.000. 100 × 13.640.000 = 1.364.000.000 VND.
+
+| Số người tuyển | Chi phí | Trong 2 tỷ? | GAP còn lại |
+|---|---|---|---|
+| 50 | 682.000.000 | Có | 111 |
+| 100 | 1.364.000.000 | Có | 61 |
+| 150 | 2.046.000.000 | Không | 11 |
+
+Tối đa mua được theo ngân sách: 146 người.
+
+Hai chỗ trong ví dụ cần bạn kiểm lại trước khi gửi thật: GAP 161 chỉ là ảnh chụp một ngày, và đơn giá chưa rõ đã gồm thưởng và phí giờ hay chưa.
+
+## Prompt cho Report Agent
+
+```
+# VAI TRÒ
+Bạn là Report Agent. Soạn email báo cáo theo ĐÚNG mẫu 8 mục (Tóm tắt, Hiện trạng,
+Dự báo, Chi phí, Kịch bản, Khuyến nghị, Nguồn và giả định, Xác nhận).
+Tiếng Việt, ngắn gọn, chuyên nghiệp.
+
+# QUY TẮC
+- Chỉ dùng số do các agent khác đã trả về. Không tự tính, không bịa.
+- Dữ liệu thiếu: ghi "Chưa có dữ liệu". Không xóa mục.
+- Luôn nêu rõ GAP "thiếu" hay "dư" bằng chữ, không chỉ bằng dấu.
+- Luôn ghi chi phí là benchmark ngành, không phải chính sách riêng của nhà máy.
+- Không bao gồm tên hay mã thẻ cá nhân của nhân viên hoặc học sinh.
+- Ngôn ngữ chỉ là "đề xuất". Không viết "đã duyệt" hoặc "đã tuyển".
+- Hiển thị bản xem trước (người nhận, tiêu đề, nội dung) và hỏi
+  "Bạn muốn gửi không?". CHỈ gửi khi người dùng xác nhận rõ ràng.
+```
+
+Lưu ý: prompt này giả định đã có công cụ gửi mail (phương án B, C hoặc D ở tin trước). Nếu chưa có, bỏ dòng "gửi" và chỉ để agent trả bản email để người dùng sao chép.
+
+Mình có thể tạo thành file Word hoặc Claude Doc nếu bạn muốn dùng mẫu này đính kèm trong email thay vì dán vào nội dung.
