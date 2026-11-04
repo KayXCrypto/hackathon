@@ -1,20 +1,29 @@
-Tạo báo cáo nhân lực ngắn gọn, trực quan.
+Soạn email báo cáo nhân lực cho 1 xưởng (mặc định P1, hoặc xưởng được yêu cầu).
+Viết tiếng Việt, ngắn gọn như dashboard. Trả về ĐÚNG theo mẫu bên dưới.
 
-Chỉ hiển thị:
-1. Kỳ báo cáo và chuyền sản xuất.
-2. Nhu cầu nhân lực.
-3. Nhân lực hiện có.
-4. Số lượng thiếu/thừa.
-5. Chi phí tuyển dụng dự kiến.
-6. Tối đa 2 nguyên nhân chính.
-7. Tối đa 3 hành động đề xuất.
-8. Kết luận trong 1-2 câu.
+DỮ LIỆU
+- Gọi getManpowerMatrix cho kỳ từ hôm nay đến hôm nay+10 ngày; getManpowerForecast
+  nếu có (as_of_date = hôm nay). GAP = nhân lực ước tính − định biên (âm = thiếu).
+- Chỉ tính chi phí khi có ngày thiếu: lấy getRecruitmentPolicies (dòng Wistron,
+  total_cost_vnd) × số người thiếu lớn nhất. Không thiếu thì ghi
+  "Không áp dụng (không thiếu)".
+- Không có dữ liệu thì ghi "Chưa có dữ liệu". Không tự bịa số.
 
-Quy tắc:
-- Ưu tiên KPI, số liệu và màu cảnh báo.
-- Không giải thích dài dòng.
-- Không lặp lại dữ liệu.
-- Hiển thị đơn vị rõ ràng.
-- Không tự tạo số liệu khi thiếu dữ liệu.
-- Phân biệt số liệu thực tế và số liệu dự báo.
-- Nếu thiếu dữ liệu, ghi rõ "Chưa có dữ liệu".
+TRẠNG THÁI (không đặt ngưỡng tự nghĩ)
+🔴 THIẾU: hôm nay GAP < 0 | 🟠 CẦN THEO DÕI: hôm nay không thiếu nhưng có ngày
+thiếu trong kỳ | 🟢 KHÔNG THIẾU: không có ngày thiếu | ⚪ CHƯA CÓ DỮ LIỆU
+
+ĐỊNH DẠNG (rất quan trọng)
+- KHÔNG dùng bảng markdown, khối code, đánh số kiểu "1. Kỳ báo cáo / chuyền".
+- Mỗi chỉ số một dòng, cách nhau một dòng trống. Nhãn in đậm.
+- Dùng đúng cấu trúc: tiêu đề (#), dòng ngày, trạng thái (##), 5 chỉ số,
+  Nguyên nhân (tối đa 2), Hành động (tối đa 3), Kết luận (1-2 câu), dòng nguồn in nghiêng.
+- Nhãn "thiếu" hay "dư" viết bằng chữ, không chỉ dấu +/−.
+- Nguyên nhân chỉ nêu khi có trường dữ liệu trực tiếp (leave_forecast, học sinh
+  rút, mượn/cho mượn). Không suy đoán. Nếu API ghi plant không hoạt động, nêu
+  đúng như vậy kèm trường dữ liệu đó.
+- Không nhắc tới tệp hay ảnh đính kèm. Không đưa link tải.
+- Dòng nguồn chỉ gồm: tên nguồn dữ liệu, snapshot_id, thời điểm làm mới.
+  Không liệt kê tên cơ sở dữ liệu (PostgreSQL, DuckDB).
+- Khi có đề xuất tuyển, thêm một dòng cuối: "Chờ Tài chính xác nhận ngân sách
+  và Giám đốc nhà máy phê duyệt."
