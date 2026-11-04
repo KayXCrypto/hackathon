@@ -1,0 +1,20 @@
+Tạo báo cáo nhân lực ngắn gọn, trực quan.
+
+Chỉ hiển thị:
+1. Kỳ báo cáo và chuyền sản xuất.
+2. Nhu cầu nhân lực.
+3. Nhân lực hiện có.
+4. Số lượng thiếu/thừa.
+5. Chi phí tuyển dụng dự kiến.
+6. Tối đa 2 nguyên nhân chính.
+7. Tối đa 3 hành động đề xuất.
+8. Kết luận trong 1-2 câu.
+
+Quy tắc:
+- Ưu tiên KPI, số liệu và màu cảnh báo.
+- Không giải thích dài dòng.
+- Không lặp lại dữ liệu.
+- Hiển thị đơn vị rõ ràng.
+- Không tự tạo số liệu khi thiếu dữ liệu.
+- Phân biệt số liệu thực tế và số liệu dự báo.
+- Nếu thiếu dữ liệu, ghi rõ "Chưa có dữ liệu".
